@@ -4,16 +4,31 @@ CREATE TYPE "ProjectStatus" AS ENUM ('IN_PROGRESS', 'COMPLETED', 'VERIFIED', 'RE
 -- CreateEnum
 CREATE TYPE "VerificationStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'NFT_MINTED');
 
+-- CreateEnum
+CREATE TYPE "TOKEN_TYPE" AS ENUM ('REFRESH');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" UUID NOT NULL,
-    "walletAddress" VARCHAR(42) NOT NULL,
+    "walletAddress" VARCHAR(100) NOT NULL,
     "username" VARCHAR(50),
     "email" VARCHAR(255),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UserToken" (
+    "id" TEXT NOT NULL,
+    "type" "TOKEN_TYPE" NOT NULL,
+    "token" TEXT NOT NULL,
+    "user_id" UUID NOT NULL,
+    "expires_at" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "UserToken_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -89,6 +104,9 @@ CREATE UNIQUE INDEX "Verification_nftTokenId_key" ON "Verification"("nftTokenId"
 
 -- CreateIndex
 CREATE INDEX "_ProjectToSkill_B_index" ON "_ProjectToSkill"("B");
+
+-- AddForeignKey
+ALTER TABLE "UserToken" ADD CONSTRAINT "UserToken_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Project" ADD CONSTRAINT "Project_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

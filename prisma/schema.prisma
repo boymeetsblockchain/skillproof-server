@@ -28,46 +28,73 @@ enum VerificationStatus {
   NFT_MINTED
 }
 
+enum TOKEN_TYPE {
+  REFRESH
+}
+
 model User {
   id            String         @id @default(uuid()) @db.Uuid
-  walletAddress String         @unique @db.VarChar(42)
+  walletAddress String         @unique @db.VarChar(100)
   username      String?        @db.VarChar(50)
   email         String?        @unique @db.VarChar(255)
-  projects      Project[]
+  token         UserToken[]
   verifications Verification[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
 
-model Project {
-  id           String        @id @default(uuid()) @db.Uuid
-  title        String        @db.VarChar(100)
-  description  String        @db.Text
-  status       ProjectStatus @default(IN_PROGRESS)
-  completedAt  DateTime
-  submittedAt  DateTime      @default(now())
-  freelancer   User          @relation(fields: [userId], references: [id])
-  userId       String        @db.Uuid
-  files        String[]
-  skills       Skill[]
-  verification Verification?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+model Client {
+  id            String         @id @default(uuid()) @db.Uuid
+  walletAddress String         @unique @db.VarChar(100)
+  username      String?        @db.VarChar(50)
+  email         String?        @unique @db.VarChar(255)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  Verification  Verification[]
+  ClientToken   ClientToken[]
+}
+
+model UserToken {
+  id String @id @default(uuid())
+
+  type  TOKEN_TYPE
+  token String
+
+  user_id String @db.Uuid
+  user    User   @relation(fields: [user_id], references: [id])
+
+  expires_at DateTime
+  created_at DateTime @default(now())
+}
+
+model ClientToken {
+  id String @id @default(uuid())
+
+  type  TOKEN_TYPE
+  token String
+
+  client_id String @db.Uuid
+  Client    Client @relation(fields: [client_id], references: [id])
+
+  expires_at DateTime
+  created_at DateTime @default(now())
 }
 
 model Verification {
-  id             String             @id @default(uuid()) @db.Uuid
-  project        Project            @relation(fields: [projectId], references: [id])
-  projectId      String             @unique @db.Uuid
-  status         VerificationStatus @default(PENDING)
-  comments       Comment[]
-  approverWallet String?            @db.VarChar(42)
-  txHash         String?            @db.VarChar(66)
-  nftTokenId     String?            @unique @db.VarChar(100)
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  User           User?              @relation(fields: [userId], references: [id])
-  userId         String?            @db.Uuid
+  id                  String             @id @default(uuid()) @db.Uuid
+  Client              Client?            @relation(fields: [clientId], references: [id])
+  clientId            String?            @db.Uuid
+  User                User?              @relation(fields: [userId], references: [id])
+  userId              String?            @db.Uuid
+  name                String
+  status              VerificationStatus
+  description         String
+  clientWalletAddress String
+  completedAt         DateTime
+  submittedAt         DateTime
+  skills              Skill[]
+  files               String[]
+  Comment             Comment[]
 }
 
 model Comment {
@@ -80,8 +107,9 @@ model Comment {
 }
 
 model Skill {
-  id        String    @id @default(uuid()) @db.Uuid
-  name      String    @db.VarChar(50)
-  projects  Project[]
-  createdAt DateTime  @default(now())
+  id             String        @id @default(uuid()) @db.Uuid
+  name           String        @db.VarChar(50)
+  createdAt      DateTime      @default(now())
+  Verification   Verification? @relation(fields: [verificationId], references: [id])
+  verificationId String?       @db.Uuid
 }
